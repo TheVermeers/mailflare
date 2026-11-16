@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import test, { after } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { build } from "esbuild";
+import { upstreamLicensingOnly } from "./helpers/fork.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const directory = mkdtempSync(join(root, "node_modules", "mailbox-settings-test-"));
@@ -191,7 +192,7 @@ test("owners and shared mailbox grants keep their existing settings permissions"
 	assert.equal((await f.patch("sam", "m-shared", { displayName: "Shared Updated" })).status, 200);
 });
 
-test("administrative mailbox settings preserve the account license requirement", async t => {
+test("administrative mailbox settings preserve the account license requirement", upstreamLicensingOnly, async t => {
 	for (const plan of ["community", "pro"]) {
 		const f = await fixture(t, plan);
 		assert.equal((await f.read("primary", "m-sam")).status, plan === "pro" ? 200 : 404);
