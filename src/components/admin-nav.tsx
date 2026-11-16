@@ -16,6 +16,7 @@ import {
   ShieldCheck,
 } from "@/components/icons";
 import { cn } from "@/lib/utils";
+import { UNLOCK_ALL_FEATURES } from "@/lib/licenses/fork-unlock";
 import { useLanguage } from "./language-provider";
 import type { TranslationKey } from "@/lib/i18n/types";
 import type { NavLink } from "./components-nav-types";
@@ -70,7 +71,7 @@ const sections: { id?: string; labelKey?: TranslationKey; links: AdminNavLink[] 
     labelKey: "admin.nav.product",
     links: [
       { href: "/branding", labelKey: "admin.nav.branding", icon: Palette, permission: "primary" },
-      { href: "/licenses", labelKey: "admin.nav.licenses", icon: BadgeDollarSign, permission: "primary" },
+      ...(UNLOCK_ALL_FEATURES ? [] : [{ href: "/licenses", labelKey: "admin.nav.licenses" as const, icon: BadgeDollarSign, permission: "primary" as const }]),
     ],
   },
 ];

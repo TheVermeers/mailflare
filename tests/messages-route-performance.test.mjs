@@ -5,6 +5,7 @@ import { setImmediate } from "node:timers/promises";
 import test, { after } from "node:test";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { build } from "esbuild";
+import { upstreamLicensingOnly } from "./helpers/fork.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = mkdtempSync(join(root, "tests", ".tmp-messages-route-"));
@@ -120,7 +121,7 @@ test("listed owned and read-only shared mailboxes reuse authorization without a 
 	}
 });
 
-test("missing, disabled, private, invalid grants and inactive sharing remain inaccessible", async (t) => {
+test("missing, disabled, private, invalid grants and inactive sharing remain inaccessible", upstreamLicensingOnly, async (t) => {
 	const f = await fixture(t);
 	for (const mailbox of ["missing", "disabled", "private"]) {
 		assert.equal((await GET(request(`mailboxId=${mailbox}`))).status, 404);

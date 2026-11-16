@@ -3,6 +3,7 @@ import packageJson from "../../../package.json";
 import { getDb } from "@/db";
 import { licenseSettings } from "@/db/schema";
 import { LICENSE_PRODUCT_IDS } from "./constants";
+import { UNLOCK_ALL_FEATURES } from "./fork-unlock";
 import { callPaymugLicenseApi } from "./paymug";
 import type { LicenseEntitlements, LicensePlan, LicenseStatus, PaymugLicenseAction } from "./types";
 import { hashLicenseKey, normalizeLicensePlan, parseFeatures } from "./utils";
@@ -34,7 +35,20 @@ async function getOrCreateLicenseSettings(env: CloudflareEnv) {
 }
 
 function toLicenseStatus(settings: typeof licenseSettings.$inferSelect): LicenseStatus {
-	const active = settings.state === "active" && (settings.plan === "pro" || settings.plan === "team");
+	if (UNLOCK_ALL_FEATURES) {
+		return {
+			plan: "team",
+			state: "active",
+			features: [],
+			seatLimit: null,
+			instanceId: settings.instanceId,
+			instanceUrl: settings.instanceUrl,
+			active: true,
+			activatedAt: settings.activatedAt,
+			validatedAt: settings.validatedAt,
+		};
+	}
+	const active =settings.state === "active" && (settings.plan === "pro" || settings.plan === "team");
 	return {
 		plan: active ? settings.plan : "community",
 		state: settings.state,
@@ -65,6 +79,10 @@ export async function getLicenseEntitlements(env: CloudflareEnv): Promise<Licens
 			canForwardEmail: status.active,
 		};
 	} catch {
+		// A missing license table (before its migration) must not lock an unlocked install.
+		if (UNLOCK_ALL_FEATURES) {
+			return { plan: "team", canCustomizeBranding: true, canManageAccounts: true, canShareMailboxes: true, accountSeatLimit: null, canForwardEmail: true };
+		}
 		return { plan: "community", canCustomizeBranding: false, canManageAccounts: false, canShareMailboxes: false, accountSeatLimit: 0, canForwardEmail: false };
 	}
 }
